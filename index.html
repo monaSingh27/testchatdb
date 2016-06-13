@@ -31,6 +31,7 @@
 
 <div id ="chat"></div>
 <form id ="send-message">
+
  <input size="35" id ="message"> </input>
  <input type="submit"></input>
  </form>
@@ -68,15 +69,14 @@
         				$('#nickWrap').hide();
         				$('#contentWrap').show();
         			}
-        			else{
-        				$nickError.html('that username is already taken.try  again')
-        			}
-
+      
         		});
 
             $nickBox.val(' ');
         	})
          socket.on('usernames',function(data){
+
+         	console.log(data);
    	        var html = " ";
    	           for(var i=0;i<data.length;i++){
    		        html +=data[i] +'<br>'
@@ -91,39 +91,24 @@
         		});
             $messgaeBox.val(' ');
         	});
-
-        	socket.on('load old msgs',function(docs){
-        		console.log(docs);
-        		for(var i=0;i<docs.length;i++){
-        			console.log('hello')
-        			displayMsg(docs[i]);
-        			console.log(docs[i]);
-        		}
-
-        	});
-
-          socket.on('new message',function(data){
-          	console.log('hiiiii');
-            console.log('data'+data);
-             console.log('data'+data.nick);
-
-            displayMsg(data);
-
-          	
-            // $chat.append('<b>'+data.nick +': </b>'+data.msg+"<br/>");
-            // // console.log(data);
-            // console.log(data.nick);
-
+           socket.on('new message',function(data){
+             
+            $chat.append('<b>'+data.nick +': </b>'+data.msg+"<br/>");  
           });
 
-          function displayMsg(data)
-          {   console.log('dataaaa '+data);
-          	console.log(data.nick);
-                   $chat.append('<b>'+data.nick +': </b>'+data.msg+"<br/>");	
-          }
 
-        });
+          //     socket.emit('room',function(data){
+          //   });
+  
+          //  socket.on('room',function(data){
+             
+          //   $chat.append('<h1>'+data.room+'</h1>');  
+          // });
+
+
+         });
 
 		</script>
 
    </body>
+   </html>

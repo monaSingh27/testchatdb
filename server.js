@@ -2,29 +2,11 @@ var express = require('express');
 var app=express();
 var server =require('http').createServer(app);
 var io= require('socket.io').listen(server);
-var mongoose= require('mongoose');
-var users= {};
-
+var nicknames= [];
+var room;
 server.listen(3000);
 console.log('server  started at 3000');
 
-
-//connection to database
-mongoose.connect('mongodb://localhost/chat', function(err){
-	if(err) {
-		console.log(err);
-	} else {
-		console.log('Connected to mongodb!');
-	}
-});
-
-var chatSchema = mongoose.Schema({
-	nick: String,
-	msg: String,
-	//created: {type: Date, default: Date.now}
-});
-
-var Chat = mongoose.model('Message', chatSchema);
 
 
 app.get('/',function(req,res){
@@ -33,47 +15,64 @@ app.get('/',function(req,res){
 
 
 io.sockets.on('connection',function(socket){
-
-	var query=Chat.find({});
-	query.sort().limit(50).exec(function(err,docs){
-		if(err) throw err;
-		console.log('sending old msgs')
-		socket.emit('load old msgs',docs)
-	});
 	socket.on('new user',function(data,callback){
-      if(data in users){
-  	   callback(false);
-  }
-  else
-  {  callback(true);
-  	socket.nickname =data;
-  	users[socket.nickname] = socket;
-    updateNicknames();
+		if(nicknames.indexOf(data) != -1){
+			callback(false);
+		}
+		else
+		{
+        callback(true);
+  	    socket.nickname =data;
+  	    // console.log(typeof socket.nickname);
+  	    // console.log(socket.nickname);
 
+
+if(socket.nickname.substring( socket.nickname.indexOf('@'))=='@gmail.com'){
+  
+   room= 'GmailRoom';
+ console.log(room);
+console.log('gmail.com')    }
+else if(socket.nickname.substring( socket.nickname.indexOf('@'))=='@workscripts.in'){
+
+     room= 'WorkscriptsRoom';
+    console.log(room);
+    console.log('workscripts.com')  }
+else{
+
+  room='GeneralRoom';
+ console.log(room);
+  console.log('General');   }
+
+console.log(socket.nickname + ' wants to join '+ room);
+
+  	    nicknames.push(socket.nickname);
+         updateNicknames();
   }
 });
-        function updateNicknames() {
-       	io.sockets.emit('usernames',Object.keys(users));
-        }
-
+	function updateNicknames()
+	{
+		io.sockets.emit('usernames',nicknames)
+	}
+		
+     
 		socket.on('send message',function(data){
-
-			var newMsg = new Chat({msg:data,nick:socket.nickname})
-			//console.log(nick);
-			newMsg.save(function(err){
-				if(err) throw err;
-
 		
 		io.sockets.emit('new message',{msg:data,nick:socket.nickname});
-			})
-	});
+			});
+	
+	  socket.on('room',function(data){
+		console.log(data);
+		io.sockets.emit('room',{room:room});
+		console.log(room);
+			});
+
+
 
 	socket.on('disconnect',function(data){
 			if(!socket.nickname)  return;
-			delete users[socket.nickname];
+		nicknames.splice(nicknames.indexOf(socket.nickname),1);
 
-  updateNicknames();
+       updateNicknames();
 			
 		});
 });
-	
